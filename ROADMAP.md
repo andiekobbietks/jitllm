@@ -575,3 +575,57 @@ and paged-out), published beside other engines' figures on the same box, and
 the work it points to — keeping hot prefixes on the card, restoring pages
 layer by layer while the first blocks already run, and keying long system
 prompts and tool definitions so agents hit them.
+
+## 26. Hybrid and state-space chats resume at every turn
+
+**Not started** (open-questions: "hybrid restore points during prefill").
+A hybrid's recurrent state is restored at one point per prompt, its end, so a
+follow-up turn recomputes the conversation. Snapshot the recurrent state with
+the KV at planned prefill cuts placed on the chat template's message
+boundaries, so a cold prompt and a resumed one cut identically and a resumed
+turn equals a fresh one. Snapshots are budgeted and evicted least recently
+used like any page. Gate: resumed equals fresh, token for token. Prior art:
+TensorFold's prompt radix tree (a 9.2k-token turn resumed in about 0.3 s).
+
+## 27. Speculation priced by measurement, then a draft tree
+
+**Not started.** (1) Measure the verify cost per row count (1-16) and the
+draft step's cost on the device at load, keep acceptance odds per stream and
+depth, and verify a draft only while its expected gain beats that row's
+marginal cost; this replaces the count heuristic in `spec.go`. (2) Then tree
+verification: the head's second-ranked tokens and prompt-lookup copies as
+extra branches, the target's picks choosing the path, KV compacted to it and
+recurrent state kept per parent, on every tier (RULE 8a). Start with two
+branches at depth one and measure. Small companions: a silence period for
+prompt lookup after rejected runs; grammar-forced tokens as free drafts under
+structured output; a reduced draft vocabulary chosen at conversion, measured
+per domain.
+
+## 28. The speculative round stays on the device
+
+**Research.** On a model with a small active set, the host's wait between a
+round's submissions can dominate. Run accept, KV compaction and the next
+round's arguments as generated kernels writing a record ring the host reads
+behind. Measure the host-sync share of a round first.
+
+## 29. Sampling that speculation and batching cannot change
+
+**Not started; opt-in.** Gumbel-max sampling with noise keyed by (seed,
+position, token), so a drafted run emits exactly the undrafted sequence at
+any temperature, and a batched stream its solo run. Measure acceptance
+against today's rejection sampling before any default changes. A pinned
+reduction-order test mode would let speculation and batch gates assert bits.
+
+## 30. Shared prefixes survive a restart
+
+**Not started.** Persist hot prefixes (system prompts, tool definitions) to
+disk, keyed by the container's hash, the JIT's kernel hash and the host, with
+a disk budget and least-recently-used eviction, so an agent's first turn
+after a restart restores instead of recomputing.
+
+## 31. Metal 4 tensor units on M5
+
+**Not started; needs M5 hardware.** The fragment layout the IR lacked (16x16
+operand fragments, the 16x32x16 operation) is now documented in working
+prior art; express it as IR ops, dequantize into threadgroup memory, then
+multiply fragments, for Metal prefill. Ties to the Metal MMA gap.
