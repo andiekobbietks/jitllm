@@ -515,3 +515,40 @@ and nothing in either app says which one it is talking to.
 - **No silent second engine:** turning the API on where the login service
   already holds the address is refused with an offer to connect; starting
   embedded beside a running service says the two share the GPU's memory.
+
+## 23. Fusion found by search: analysis at conversion, timing on the device
+
+**Not started.** Today each fused kernel is written by hand and a small tuner
+picks among a few variants per device (the split tuner, the decode prologue's
+per-card tuner). The kernel composer the project aims at searches instead:
+which ops of a block to fuse, and how to tile them, chosen per shape and per
+device. The work splits along what the container can know.
+
+**At conversion (hardware-independent, stored in the `.jlm`):**
+- The fusion graph of each block: which ops can fuse (norm into the next
+  matvec, q/k/v and gate/up sharing an input, an activation into its
+  consumer), which blocks are identical, and the model's distinct shapes, so
+  the device's search starts pruned.
+- Per-block weight constants the fused paths need at run time, computed once:
+  e.g. the weight-side sums and minimums an int8 activation path applies as
+  corrections.
+- Later, layouts that suit fused kernels on every tier (q/k/v and gate/up
+  rows interleaved, quantised blocks ordered for fragment loads, rows padded
+  to tile multiples) — only where no tier is hurt, since one container serves
+  the host and every device; a layout change is a container version.
+- Optionally, a ranked shortlist of candidates per device class from a cost
+  model, as the search's prior.
+
+**On the device (hardware-dependent, never in the container):**
+- A bounded search over that shortlist: generate and compile a few dozen
+  candidates per distinct shape, time them by interleaved trials in the
+  background after the model is ready (nothing compiles in the user's path),
+  keep a winner only if it beats today's kernel, cache it per binary, device
+  and shape, and adopt it when it is safe to.
+- Every winner is held to the per-op kernels (token ids, logits) before it is
+  kept; the per-op path stays the reference and the fallback.
+
+First steps: the fusion graph and the per-block constants at conversion; then
+the search over the existing fused variants (#87, #110, the CPU groups) before
+any new kernel shapes. Prior art: Mirage (superoptimizer and MPK), TVM Ansor,
+Triton autotuning.
