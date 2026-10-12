@@ -321,15 +321,13 @@ type ModelInfo struct {
 	// reports as `max_model_len`; `context_length` is the trained context.
 	DefaultMaxSeq int32 `protobuf:"varint,25,opt,name=default_max_seq,json=defaultMaxSeq,proto3" json:"default_max_seq,omitempty"`
 	// What the model can be asked to do, a name added and never renamed:
-	//
-	//	"completion"   Generate on a text or token prompt
-	//	"chat"         Generate on a chat prompt (the container has a template)
-	//	"tools"        chat with tools and tool_choice
-	//	"json_schema"  response_format / json_schema constrained output
-	//	"logprobs"     per-token log-probabilities
-	//	"vision"       chat pictures (the container carries a vision tower)
-	//	"embeddings"   Embed (the container states a pooling)
-	//
+	//   "completion"   Generate on a text or token prompt
+	//   "chat"         Generate on a chat prompt (the container has a template)
+	//   "tools"        chat with tools and tool_choice
+	//   "json_schema"  response_format / json_schema constrained output
+	//   "logprobs"     per-token log-probabilities
+	//   "vision"       chat pictures (the container carries a vision tower)
+	//   "embeddings"   Embed (the container states a pooling)
 	// An encoder has "embeddings" and nothing else.
 	Capabilities  []string `protobuf:"bytes,26,rep,name=capabilities,proto3" json:"capabilities,omitempty"`
 	unknownFields protoimpl.UnknownFields

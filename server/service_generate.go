@@ -52,8 +52,12 @@ func samplingOf(p *v1.SamplingParams) samplingFields {
 		MinP:             f64(p.MinP),
 		PresencePenalty:  f64(p.PresencePenalty),
 		FrequencyPenalty: f64(p.FrequencyPenalty),
-		// repeat_penalty is the OpenAI surface's repetition_penalty.
-		RepetitionPenalty: f64(p.RepeatPenalty),
+	}
+	// repeat_penalty is the OpenAI surface's repetition_penalty. On this
+	// surface 0 has always meant off, as 1 does, and front ends send the
+	// session's zero; only a negative value is refused.
+	if p.RepeatPenalty != nil && *p.RepeatPenalty != 0 {
+		q.RepetitionPenalty = f64(p.RepeatPenalty)
 	}
 	if p.TopK != nil {
 		k := int(*p.TopK)
