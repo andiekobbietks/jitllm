@@ -552,3 +552,26 @@ First steps: the fusion graph and the per-block constants at conversion; then
 the search over the existing fused variants (#87, #110, the CPU groups) before
 any new kernel shapes. Prior art: Mirage (superoptimizer and MPK), TVM Ansor,
 Triton autotuning.
+
+## 24. Speculative decoding with a separate drafter model
+
+**Not started.** Speculation today is the model's own MTP heads and prompt
+lookup. A small drafter model of the same family (its tokenizer identical)
+proposes several tokens; the target checks them in one batched pass and keeps
+the matching prefix, so the answer is the target's alone. The drafter is a
+second loaded model, so placement applies: drafter on the host or a second
+device, target on the card, each paged and relocatable as any model. Open:
+choosing the draft length per measured acceptance, tree drafts, and sharing a
+batch's verification pass across sequences. Gate: greedy output identical
+with the drafter on and off; rows with speculation off and on beside
+llama.cpp's and other engines' drafters on the same pair.
+
+## 25. Prompt reuse measured and made fast
+
+**Partly built.** The prefix cache restores a stored prompt's KV instead of
+recomputing it. What is missing is the number: time from request to first
+token for a reused prompt (short and long, host and every device, resident
+and paged-out), published beside other engines' figures on the same box, and
+the work it points to — keeping hot prefixes on the card, restoring pages
+layer by layer while the first blocks already run, and keying long system
+prompts and tool definitions so agents hit them.
